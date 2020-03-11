@@ -1,0 +1,152 @@
+<%@ page language="java" contentType="text/html; charset=EUC-KR" pageEncoding="EUC-KR"%>
+<%@ page import="kr.ac.inhatc.DBConnect" %>
+<%@ page import="java.sql.*" %>
+
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="EUC-KR">
+<title>Insert title here</title>
+<!-- Latest compiled and minified CSS -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+
+<!-- jQuery library -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+
+<!-- Popper JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+
+<!-- Latest compiled JavaScript -->
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+</head>
+<body>
+<%
+//이용자 정보 변수 받아오기 및 초기화
+String id = (String)session.getAttribute("__id");
+if(id==null){
+	id = "ID101";
+}
+
+//이용자 초기화 변수 선언
+int textNo;
+String name="";
+String date="";
+
+//게시글 개수 변수
+int pNum = 10;
+int sNum = 10;
+int [][] tno = new int[pNum][sNum];
+String[][] title = new String[pNum][sNum];
+String[][] tname = new String[pNum][sNum];
+String[][] tdate = new String[pNum][sNum];
+String[][] tcontent = new String[pNum][sNum];
+int textNum = 1;
+int lastNum = 0;
+int pCount = 0;
+int sCount = 0;
+
+//페이지 정보 받아오기 및 초기화
+String tempPage = request.getParameter("_pageNum");
+int pageNum = 1;
+if(tempPage!=null){
+	pageNum = Integer.parseInt(tempPage);
+}
+
+//DB연동 및 데이터 불러오기
+Class.forName("oracle.jdbc.driver.OracleDriver");//1.DB드라이버잡기
+	System.out.println("JoinCheck 드라이버잡기");
+	Connection conn = DriverManager.getConnection(
+			"jdbc:oracle:thin:@192.168.219.115:1521:xe", "jsptest", "1234");//2.커넥션객체생성해서 커넥트
+	Statement stmt = conn.createStatement();//3.커넥트 객체로 stmt 객체를 만든다
+	//글의 개수 불러오고 내용을 배열변수에 등록
+	ResultSet rs = stmt.executeQuery("SELECT MAX(no) FROM textList");
+	while(rs.next()){
+		lastNum = rs.getInt(1);
+	}
+	stmt.executeQuery("SELECT COUNT(no) FROM textList");
+	while(rs.next()){
+		textNum = rs.getInt(1);
+	}
+	
+	//글번호 초기화
+	for(int i = 0 ; i < 10 ; i++){
+		for(int j = 0 ; j < 10 ; j++){
+			tno[i][j] = 0;
+		}
+	}
+	
+	//글 정보 불러오기
+	rs = stmt.executeQuery("SELECT * FROM textList ORDER BY no DESC");
+
+	//제어용 변수 선언
+	int i = 0;
+	int j = 0;
+	while(rs.next()){
+		tno[i][j] = rs.getInt("no");
+		tname[i][j] = rs.getString("userid");
+		title[i][j] = rs.getString("title");
+		tcontent[i][j] = rs.getString("content");
+		tdate[i][j] = (rs.getString("data")).substring(0, 10);
+		j++;
+		if(j>=10){
+			j = 0;
+			i++;
+		}
+	}
+rs.close();
+stmt.close();
+conn.close();
+
+
+%>
+
+<div class="container">
+  <center><h2>공지사항</h2></center>
+  <br/>
+  <table class="table">
+    <thead align="center">
+      <tr>
+      	<th align="center">글 번호</th>
+      	<th>제목</th>
+        <th>작성자 아이디</th>
+        <th>작성 날짜</th>                
+      </tr>
+    </thead>
+    <tbody align="center">
+    <%
+    for(i = 0 ; i < 10 ; i++){
+    	if(title[pageNum-1][i]!=null){
+    		out.print("<tr>");
+    		out.print("<td>" + tno[pageNum-1][i] + "</td>");
+    		out.print("<td><a href='ReadText.jsp?_tno=" + tno[pageNum-1][i] + "'>" + title[pageNum-1][i] + "</a></td>");
+    		out.print("<td>" + tname[pageNum-1][i] + "</td>");
+    		out.print("<td>" + tdate[pageNum-1][i] + "</td>");
+    		out.print("</tr>");
+    	}
+    }
+    %>                                
+    </tbody>
+  </table>
+  <center><form action=WriteText.jsp method=post>
+  <%
+  string tt;
+  
+  if(id.equals("admin")){
+	  out.print("<button type='submit' class='btn btn-dark'>글 쓰기</button>");
+  }  
+  %>  
+  </form></center>
+  <!-- 페이지 번호 -->
+  <center>
+  <%
+  for(i = 0 ; i < 10 ; i++){
+	  if(title[i][0]!=null){
+		  out.print("<a href='NoticeList.jsp?_pageNum=" + (i+1) + "'>" + (i+1) + "</a>");
+	  }
+  }
+  %>
+  </center>  
+</div>
+</body>
+</html>

@@ -1,0 +1,43 @@
+<%@ page language="java" contentType="text/html; charset=EUC-KR"
+    pageEncoding="EUC-KR"%>
+<%@ page import="kr.ac.inhatc.DBConnect" %>
+<%@ page import="java.sql.*" %>
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="EUC-KR">
+<title>Insert title here</title>
+</head>
+<body>
+<%
+//인코딩 언어 설정
+request.setCharacterEncoding("euc-kr");
+
+	//이용자 정보 변수 받아오기 및 초기화
+	String id = (String)session.getAttribute("__id");
+	if(id==null){
+		id = "ID101";
+	}
+String name = request.getParameter("_name");
+
+//DB연동 및 데이터 저장
+//데이터베이스 연동 이용자 이름 불러오기
+Class.forName("oracle.jdbc.driver.OracleDriver");//1.DB드라이버잡기
+	System.out.println("JoinCheck 드라이버잡기");
+	Connection conn = DriverManager.getConnection(
+			"jdbc:oracle:thin:@127.0.0.1:1521:xe", "jsptest", "1234");//2.커넥션객체생성해서 커넥트
+	Statement stmt = conn.createStatement();//3.커넥트 객체로 stmt 객체를 만든다
+	stmt.executeUpdate("UPDATE userInfo SET name='" + name + "' WHERE id='" + id + "'");
+
+stmt.close();
+conn.close();
+
+DBConnect dbc = new DBConnect();
+dbc.connectDB();
+dbc.updateQuery("UPDATE userInfo SET name='" + name + "' WHERE id='" + id + "'");
+dbc.closeDB();
+
+response.sendRedirect("InputProfile.jsp?");
+%>
+</body>
+</html>

@@ -1,0 +1,65 @@
+================================================================================
+유저 생성 및 권한 부여 처음 사용시 필수
+================================================================================
+
+create user jsptest identified by 1234;
+grant connect, resource, dba to jsptest;
+
+================================================================================
+userinfo 테이블 유저정보 삽입 및 출력용
+아이디, 이름, 비밀번호, 포인트, 윈, 전화, 솔트값 
+기본키 = id(유저아이디)  포인트 및 윈 속성은 디폴트 0이지만 현재까지 sql문에서는 값을 주면서 테스트 중
+================================================================================
+create table userInfo(
+id varchar2(20) primary key,
+name varchar2(20),
+pw varchar2(100),
+point number(10) default '0',
+win number(10) default '0',
+tel varchar2(20),
+salt varchar2(100)
+);
+
+
+테이블 생성 및 정보 불러오기 확인용
+(JSP로그인 회원가입 테스트할때는 회원가입 절차로 아이디를 만들어줘야함)
+insert into userinfo values('ID101','김지태101','pw','100','0','010-0000-0000','salt');
+insert into userinfo values('ID102','김지태102','pw','90','0','010-1234-1234','salt');
+insert into userinfo values('ID103','김지태103','pw','150','0','010-5555-5555','salt');
+insert into userinfo values('ID104','김지태104','pw','200','0','010-6969-7474','salt');
+insert into userinfo values('ID105','김지태105','pw','135','0','010-8585-7444','salt');
+
+
+================================================================================
+게시판 게시글 정보 테이블
+게시글 번호, 유저아이디, 제목, 내용, 날짜,
+기본키 = no, 외래키 = userid
+================================================================================
+
+create table textList(
+no number(10) primary key,
+userid varchar2(20) references userinfo(id),
+title varchar2(40),
+content varchar2(1000),
+data Date
+);
+
+Insert Into textList Values(1, 'ID101' ,'첫 공지사항', '이 사이트를 방문해 주셔서 감사합니다.', '2019-11-09');
+Insert Into textList Values(2, 'ID103' ,'두번째 공지사항', '이 사이트를 꾸준히 이용해 주셔서 감사합니다.', '2019-11-09');
+
+
+================================================================================
+================================================================================
+--자유게시판 DB
+
+create table freeTextList(
+no number(10) primary key,
+userid varchar2(20) references userinfo(id),
+title varchar2(40),
+content varchar2(1000),
+data Date
+);
+
+Insert Into freeTextList Values(1, 'ID101' ,'첫 게시판글', '내가 1등이다', '2019-11-09');
+Insert Into freeTextList Values(2, 'ID103' ,'두번째 작성글', '두번째로 글을 남깁니다.', '2019-11-09');
+

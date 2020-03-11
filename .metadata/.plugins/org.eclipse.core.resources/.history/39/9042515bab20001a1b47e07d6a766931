@@ -1,0 +1,465 @@
+<%@page import="com.mysql.jdbc.log.Log"%>
+<%@page import="java.io.Console"%>
+<%@page import="java.text.*"%>
+<%@ page language="java" contentType="text/html; charset=EUC-KR"
+    pageEncoding="EUC-KR" import="java.sql.*"%>
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="EUC-KR">
+<title>Double Six</title>
+
+<!-- Latest compiled and minified CSS -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+
+<!-- jQuery library -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+
+<!-- Popper JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+
+<!-- Latest compiled JavaScript -->
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+
+
+<!-- 구글차트 디비 -->
+<style>
+<%
+
+//이용자 정보 변수 받아오기 및 초기화
+String id = (String)session.getAttribute("__id");
+if(id==null){
+	//response.sendRedirect("index.jsp");
+	response.sendRedirect("index.jsp");
+}
+System.out.println(session.getAttribute("__id"));
+int[] point = {0,0,0,0,0};
+String[] name = new String[5];
+
+//게시글 개수 변수
+int pNum = 10;
+int sNum = 10;
+int [][] tno = new int[pNum][sNum];
+String[][] title = new String[pNum][sNum];
+String[][] tname = new String[pNum][sNum];
+String[][] tdate = new String[pNum][sNum];
+String[][] tcontent = new String[pNum][sNum];
+int textNum = 1;
+int lastNum = 0;
+int pCount = 0;
+int sCount = 0;
+
+int [][] ftno = new int[pNum][sNum];
+String[][] ftitle = new String[pNum][sNum];
+String[][] ftname = new String[pNum][sNum];
+String[][] ftdate = new String[pNum][sNum];
+String[][] ftcontent = new String[pNum][sNum];
+
+
+
+int i=0;
+try{
+	Class.forName("oracle.jdbc.driver.OracleDriver");//1.DB드라이버잡기
+	System.out.println("JoinCheck 드라이버잡기");
+	Connection conn = DriverManager.getConnection(
+			"jdbc:oracle:thin:@192.168.219.115:1521:xe", "jsptest", "1234");//2.커넥션객체생성해서 커넥트
+			System.out.println("조인체크 커넥트");
+	Statement stmt = conn.createStatement();//3.커넥트 객체로 stmt 객체를 만든다
+	System.out.println("statement");
+	//회원정보 저장합니다.
+	ResultSet rs=stmt.executeQuery("SELECT point,name FROM(SELECT point,name FROM userinfo ORDER BY point DESC) WHERE ROWNUM <= 5");
+	System.out.println("sql문 통과");
+	System.out.println("2차 시도");
+	while(rs.next()) {
+		
+		point[i] = rs.getInt("point");
+		System.out.println("getint 통과 : " + point[i]);
+
+		name[i] = rs.getString("name");
+		System.out.println("getString 통과 : " + name[i]);
+		System.out.println(name[i]);
+		i++;
+	}
+	
+	//글의 개수 불러오고 내용을 배열변수에 등록
+	rs = stmt.executeQuery("SELECT MAX(no) FROM textList");
+	while(rs.next()){
+		lastNum = rs.getInt(1);
+	}
+	rs = stmt.executeQuery("SELECT COUNT(no) FROM textList");
+	while(rs.next()){
+		textNum = rs.getInt(1);
+	}
+	//글번호 초기화
+	for(int k = 0 ; k < 10 ; k++){
+		for(int j = 0 ; j < 10 ; j++){
+			tno[k][j] = 0;
+		}
+	}
+	SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy");
+	
+	rs = stmt.executeQuery("SELECT * FROM textList ORDER BY no DESC");
+	//제어용 변수 선언
+	int k = 0;
+	int j = 0;
+	while(rs.next()){
+		tno[k][j] = rs.getInt("no");
+		tname[k][j] = rs.getString("userid");
+		title[k][j] = rs.getString("title");
+		tcontent[k][j] = rs.getString("content");
+		tdate[k][j] = (rs.getString("data")).substring(0, 10);
+		j++;
+		if(j>=10){
+			j = 0;
+			k++;
+		}
+	}
+	
+	//자유게시판 글의 개수 불러오고 내용을 배열변수에 등록
+	rs = stmt.executeQuery("SELECT MAX(no) FROM freeTextList");
+	while(rs.next()){
+		lastNum = rs.getInt(1);
+	}
+	rs = stmt.executeQuery("SELECT COUNT(no) FROM freeTextList");
+	while(rs.next()){
+		textNum = rs.getInt(1);
+	}
+	//글번호 초기화
+	for(int q = 0 ; q < 10 ; q++){
+		for(int r = 0 ; r< 10 ; r++){
+			ftno[q][r] = 0;
+		}
+	}
+	
+	rs = stmt.executeQuery("SELECT * FROM freeTextList ORDER BY no DESC");
+	
+	
+	
+	//제어용 변수 선언
+	int l = 0;
+	int m = 0;
+	while(rs.next()){
+		ftno[l][m] = rs.getInt("no");
+		ftname[l][m] = rs.getString("userid");
+		ftitle[l][m] = rs.getString("title");
+		ftcontent[l][m] = rs.getString("content");
+		ftdate[l][m] = (rs.getString("data")).substring(0, 10);
+		m++;		
+		if(m>=10){
+			m = 0;
+			l++;
+		}
+	}
+	
+	
+	
+	}catch(Exception e){
+	e.printStackTrace();
+	}
+	System.out.println("포인트를 불러오면 : "+point[0]+"//" + point[1] +"//"+point[2]+"//"+point[3]+"//" +point[4]);
+	System.out.println("포인트를 불러오면 : "+name[0]+"//" + name[1] +"//"+name[2]+"//"+name[3]+"//" +name[4]);
+%>
+.container1 {
+	display: table;
+	width: 100%;
+	
+}
+</style>
+
+
+
+
+<!-- 구글차트 -->
+<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+<script>
+google.charts.load('current', {packages: ['corechart', 'bar']});
+google.charts.setOnLoadCallback(drawBasic);
+function drawBasic() {
+    var data = google.visualization.arrayToDataTable([
+        ['Element', 'Density', { role: 'style' }],
+        ['<%=name[0]%>', <%=point[0]%>, '#F0D000'],            // RGB value
+        ['<%=name[1]%>', <%=point[1]%>, '#F0D000'],            // English color name
+        ['<%=name[2]%>', <%=point[2]%>, '#F0D000'],
+        ['<%=name[3]%>', <%=point[3]%>, '#F0D000'],
+        ['<%=name[4]%>', <%=point[4]%>, '#F0D000'], // CSS-style declaration
+     ]);
+    var options = {
+            title: '우리사이트 포인트 랭킹 Top 5',
+            legend : 'none',
+            backgroundColor:'#000000', //배경색
+            pointSize:5,
+            titleTextStyle: { 
+                color: 'white' // 타이틀 색
+            },
+            hAxis:{  // 가로
+                textStyle:{
+                    fontSize:20,
+                    color:'white'
+                },
+                baselineColor:'white' // 수직 왼쪽 선
+            },
+            vAxis:{ // 세로 
+                textStyle:{
+                    fontSize:20,
+                    color:'white'
+                },
+                gridlines: { // 중간의 선
+                    color: '#8898A1'
+                },
+                baselineColor:'8898A1' // 하단 선  
+            },
+            series: { // 선색
+                0: {
+                    color: '#F0A57C'
+                },
+                1: {
+                    color: '#91FFC3'
+                }
+            }
+        };
+      var chart = new google.visualization.ColumnChart(
+        document.getElementById('char_one'));
+      chart.draw(data, options);
+    }
+</script>
+
+
+
+
+
+
+<!-- 상단 이미지 칸입니다. 없애도 됩니다.  -->
+<style>
+	.tiledBackground {
+		background-image: url(image/DoubleSixFooter.png);
+		background-repeat: no-repeat;
+		background-position: center;
+		width: 1902px;
+		height: 200px;
+}
+</style>
+
+
+
+<!-- div 셋팅 -->
+<style>
+#leftad{
+	width:10%;
+	height:auto;
+	float:left;
+}
+
+#middle{
+	width:80%;
+	height:700px;
+	float:left;
+}
+
+#rightad{
+	width:10%;
+	height:auto;
+	float:left;
+}
+</style>
+
+
+
+<!-- 메인메뉴(nav)설정 -->
+
+<style>
+@import url(https://fonts.googleapis.com/css?family=Raleway);
+
+nav {
+  padding: 10px;
+  text-align: center;
+  font-family: Raleway;
+  box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.5);
+}
+
+#nav-3 {
+  background:#3399ff;
+}
+
+.link-3 {
+  transition: 0.4s;
+  color: #ffffff;
+  font-size: 30px;
+  text-decoration: none;
+  padding: 0 10px;
+  margin: 0 10px;
+}
+.link-3:hover {
+  background-color: #ffffff;
+  color: #668ee3;
+  padding: 5px 10px;
+}
+
+</style>
+
+
+
+
+<!-- 순위 제목 -->
+<style>
+nav{
+	background: #2f3542;
+	border-radius: 30px;
+	padding: 1px;
+}
+.header__content {
+	height: 70px;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+  color: white;
+}
+.header__title{
+	padding: 10px 20px;
+	display: inline-block;
+	border-radius: 5px;
+	text-decoration: none;
+	font-size: 40px;
+	text-transform: uppercase;
+}
+
+</style>
+
+
+<!-- 칸나눌때 쓰는 선을 대충 footer로 쓰고있습니다. padding이 선 두깨입니다. background가 색입니다.-->
+<style>
+footer{
+	clear: both;
+	background: #940038;
+	text-align: center;
+	padding: 0.5px;
+	color: white;
+	border-radius: 5px;
+}
+table{
+background: #ffffff;
+}
+</style>
+
+
+</head>
+
+
+		<!-- 여기서 백그라운드를 바꾸면 배경 색이 모두 바뀝니다. -->
+		<body  onload="InitializeStaticMenu();" style="overflow:auto; background:black" >
+		<!--Google -Fonts-->
+		<link href='https://fonts.googleapis.com/css?family=Sintony:400,700&subset=latin-ext' rel='stylesheet' type='text/css'>
+		
+		<!--Font-awsome-->
+		<link href="//maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css" rel="stylesheet">
+
+
+<div class="container1">
+	<header class="tiledBackground"></header>	
+	<nav id="nav-3">
+		<a class="link-3" href="Main.jsp">Home</a>
+		<a class="link-3" href="QuizMain.jsp?">포인트퀴즈</a>
+		<a class="link-3" href="GameMain.jsp?">포인트게임</a>
+		<a class="link-3" href="MainTextList.jsp?">게시판</a>
+		<a class="link-3" href="Profile.jsp">MyProfile</a>
+	</nav>
+</div>
+
+
+<div id="bottom" style=" height:auto;  width: 100%;">
+	<div id="leftad">
+		<footer class="footer">
+	</div>
+	<p>
+	<p>
+	
+	<div id="middle">
+		<header class="header">
+			<nav class="header__content">
+				<a class="header__title">순위</a>
+			</nav>
+		</header>
+		<p><p>
+		<!--차트 그리기-->
+		<div id="char_one"></div>
+		<p><p>
+		<!-- 그냥 선그리기 대신 -->
+		<footer class="footer"></footer>
+		<p>
+		<p>
+		<div style="overflow:auto; background:#99ff99; border-radius: 10px;">
+			<center><h2>공지사항</h2></center>
+			<p>
+			<table class="table">
+				<thead align="center">
+					<tr>
+						<th align="center">글 번호</th>
+						<th>제목</th>
+						<th>작성자 이름</th>
+						<th>작성 날짜</th>                
+					</tr>
+				</thead>
+				
+				<tbody align="center">
+    <%
+    int pageNum = 1;
+    for(i = 0 ; i < 3 ; i++){
+    	if(title[pageNum-1][i]!=null){
+    		out.print("<tr>");
+    		out.print("<td>" + tno[pageNum-1][i] + "</td>");
+    		out.print("<td><a href='ReadText.jsp?_tno=" + tno[pageNum-1][i] + "'>" + title[pageNum-1][i] + "</a></td>");
+    		out.print("<td>" + tname[pageNum-1][i] + "</td>");
+    		out.print("<td>" + tdate[pageNum-1][i] + "</td>");
+    		out.print("</tr>");
+    	}
+    }
+    %>      
+				</tbody>
+			</table>
+		</div>
+
+
+		<!-- 그냥 선그리기 대신 --><p><p>
+		<footer class="footer"></footer><p><p>
+		
+		<div style="overflow:auto; background:#99ff99; border-radius: 10px;">
+		<center><h2>자유게시판</h2></center>
+		<p>
+		<table class="table">
+			<thead align="center">
+				<tr>
+					<th align="center">글 번호</th>
+					<th>제목</th>
+					<th>작성자 이름</th>
+					<th>작성 날짜</th>                
+				</tr>
+			</thead>
+			<tbody align="center">
+    <%
+    pageNum = 1;
+    for(i = 0 ; i < 3 ; i++){
+    	if(title[pageNum-1][i]!=null){
+    		out.print("<tr>");
+    		out.print("<td>" + ftno[pageNum-1][i] + "</td>");
+    		out.print("<td><a href='ReadText.jsp?_tno=" + ftno[pageNum-1][i] + "'>" + ftitle[pageNum-1][i] + "</a></td>");
+    		out.print("<td>" + ftname[pageNum-1][i] + "</td>");
+    		out.print("<td>" + ftdate[pageNum-1][i] + "</td>");
+    		out.print("</tr>");
+    	}
+    }
+    %>       
+			</tbody>
+		</table>
+		</div>
+		<!-- 그냥 선그리기 대신 -->
+		<p><p>
+		<footer class="footer"></footer>
+	
+	</div>
+	<div id="rightad">
+		
+		<!-- 그냥 선그리기 대신 -->
+		<footer class="footer">
+	</div>
+</div>	
+</body>
+</html>

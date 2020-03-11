@@ -1,0 +1,88 @@
+<%@ page language="java" contentType="text/html; charset=EUC-KR" pageEncoding="EUC-KR"%>
+<%@ page import="kr.ac.inhatc.DBConnect" %>
+<%@ page import="java.sql.*" %>
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="EUC-KR">
+<title>Insert title here</title>
+<!-- Latest compiled and minified CSS -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+
+<!-- jQuery library -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+
+<!-- Popper JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+
+<!-- Latest compiled JavaScript -->
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+</head>
+<body>
+<%
+//글 정보 변수 받아오기 및 초기화
+
+	//이용자 정보 변수 받아오기 및 초기화
+	String id = (String)session.getAttribute("__id");
+	if(id==null){
+		response.sendRedirect("index.jsp");
+	}
+String tno = request.getParameter("_tno");
+int textNo;
+String userID = "";
+
+if(tno==null){
+	textNo = 1;
+	tno = "1";
+}else{
+	textNo = Integer.parseInt(tno);
+}
+
+//글 정보 초기화 변수 선언
+String name="";
+String title="";
+String content="";
+
+//DB연동 및 데이터 불러오기
+Class.forName("oracle.jdbc.driver.OracleDriver");//1.DB드라이버잡기
+	System.out.println("JoinCheck 드라이버잡기");
+	Connection conn = DriverManager.getConnection(
+			"jdbc:oracle:thin:@192.168.219.115:1521:xe", "jsptest", "1234");//2.커넥션객체생성해서 커넥트
+	Statement stmt = conn.createStatement();//3.커넥트 객체로 stmt 객체를 만든다
+	ResultSet rs;
+
+
+rs = stmt.executeQuery("SELECT * FROM freeTextList WHERE no="+textNo);
+while(rs.next()){
+	userID = rs.getString("userID");
+}
+rs = stmt.executeQuery("SELECT * FROM userinfo WHERE id='"+userID + "'");
+while(rs.next()){
+	name = rs.getString("name");
+}
+rs = stmt.executeQuery("SELECT * FROM freeTextList WHERE no="+textNo);
+while(rs.next()){
+	title = rs.getString("title");
+}
+rs = stmt.executeQuery("SELECT * FROM freeTextList WHERE no="+textNo);
+while(rs.next()){
+	content = rs.getString("content");
+}
+
+rs.close();
+stmt.close();
+conn.close();
+%>
+<form action="TextSaveFree.jsp" method="get">
+<div class="card">
+<!-- 제목 입력 -->
+  <div class="card-header" align="center"> <input type="text" class="form-control" id="usr" name=_title></div>
+  <!-- 본문 입력 -->
+  <div class="card-body"><textarea class="form-control" rows="20" id="comment" name=_content></textarea></div> 
+  <div class="card-footer"><center> 
+  <button type="submit">저장하기</button>
+  </center></div>
+</div></form>
+</body>
+</html>

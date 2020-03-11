@@ -1,0 +1,60 @@
+<%@page import="java.util.Date"%>
+<%@page import="java.sql.Date"%>
+<%@ page language="java" contentType="text/html; charset=EUC-KR"
+    pageEncoding="EUC-KR"%>
+<%@ page import="kr.ac.inhatc.DBConnect" %>
+<%@ page import="java.sql.*" %>
+<%@ page import="java.util.*" %>
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="EUC-KR">
+<title>Insert title here</title>
+</head>
+<body>
+<%
+//인코딩 언어 설정
+request.setCharacterEncoding("euc-kr");
+
+//글 정보 변수 받아오기 및 초기화
+String title = request.getParameter("_title");
+String content = request.getParameter("_content");
+
+
+int tNo=100;
+String nDate;
+//이용자 정보 변수 받아오기 및 초기화
+String id = (String)session.getAttribute("__id");
+if(id==null){
+	id = "ID101";
+}
+String name = request.getParameter("_name");
+
+//DB연동 및 데이터 저장
+Class.forName("oracle.jdbc.driver.OracleDriver");//1.DB드라이버잡기
+	System.out.println("JoinCheck 드라이버잡기");
+	Connection conn = DriverManager.getConnection(
+			"jdbc:oracle:thin:@127.0.0.1:1521:xe", "jsptest", "1234");//2.커넥션객체생성해서 커넥트
+	Statement stmt = conn.createStatement();//3.커넥트 객체로 stmt 객체를 만든다
+	ResultSet rs;
+//글 번호 지정
+rs = stmt.executeQuery("SELECT MAX(no) FROM textList");
+while(rs.next()){
+	tNo = rs.getInt(1) + 1;
+}
+
+//작성 날짜 지정
+Date date = new Date();
+nDate = String.valueOf(date.getYear()+1900) + "-" + String.valueOf(date.getMonth()+1) + "-" + String.valueOf(date.getDate());
+
+//글 저장
+stmt.executeUpdate("INSERT INTO textList VALUES(" + tNo + ", '" + id + "', '" + title + "', '" + content + "', '" + nDate + "')");
+
+rs.close();
+stmt.close();
+conn.close();
+
+response.sendRedirect("NoticeList.jsp");
+%>
+</body>
+</html>

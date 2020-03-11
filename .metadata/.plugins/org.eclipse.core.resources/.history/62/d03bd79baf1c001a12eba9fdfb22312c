@@ -1,0 +1,33 @@
+<%@ page language="java" contentType="text/html; charset=EUC-KR"
+    pageEncoding="EUC-KR"%>
+<%@ page import="kr.ac.inhatc.DBConnect" %>
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="EUC-KR">
+<title>Insert title here</title>
+</head>
+<body>
+<%
+//인코딩 언어 설정
+request.setCharacterEncoding("euc-kr");
+
+	//이용자 정보 변수 받아오기 및 초기화
+	String id = (String)session.getAttribute("__id");
+	if(id==null){
+		id = "ID101";
+	}
+String name = request.getParameter("_name");
+
+//DB연동 및 데이터 저장
+
+
+DBConnect dbc = new DBConnect();
+dbc.connectDB();
+dbc.updateQuery("UPDATE userInfo SET name='" + name + "' WHERE id='" + id + "'");
+dbc.closeDB();
+
+response.sendRedirect("InputProfile.jsp?");
+%>
+</body>
+</html>
